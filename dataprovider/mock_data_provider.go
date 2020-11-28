@@ -24,3 +24,20 @@ func (mockDataProvider MockDataProvider) GetProducts() []model.Product {
     out := []model.Product{product1, pproduct2}
     return out
 }
+
+// GetFullProduct devuelve el detalle de un producto
+func (mockDataProvider MockDataProvider) GetFullProduct(reference string) model.Product {
+    info := model.ProductInfo{
+        Description : "El camión monstruo más heroico. Ganó la copa mundial TruckStarts 2017 contra el TruckJoker.",
+        Price : 799999,
+        AvailableAmount : 8,
+    }
+    product := model.Product{
+        Reference : reference,
+        Name : "BatTruck",
+        ImagePath : "https://i.ibb.co/7K2H8k1/01.png",
+        ShortDescription : "El camión monstruo más heroico. Ganó la copa mundial TruckStarts 2017 contra el TruckJoker.",
+        ProductInfo : info,
+    }
+    return product
+}

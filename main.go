@@ -4,11 +4,14 @@ import (
     // "fmt"
     "net/http"
     "./resources"
+    "github.com/gorilla/mux" // go get -u github.com/gorilla/mux
 )
 
 func main() {
-    http.HandleFunc("/health-check", resources.GetHealth)
-    http.HandleFunc("/product", resources.GetProducts)
-    http.ListenAndServe(":8080", nil)
+    router := mux.NewRouter()
+    router.HandleFunc("/health-check", resources.GetHealth).Methods("GET")
+    router.HandleFunc("/product", resources.GetProducts).Methods("GET")
+    router.HandleFunc("/product/{reference}", resources.GetFullProduct).Methods("GET")
+    http.ListenAndServe(":8080", router)
 }
 
