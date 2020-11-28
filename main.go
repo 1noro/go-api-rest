@@ -1,24 +1,13 @@
 package main
 
 import (
-    "fmt"
+    // "fmt"
     "net/http"
-    "encoding/json"
+    "./resources"
 )
 
-type jSONText struct {
-    Text string `json:"text"`
-}
-
-func getHealth(responseWriter http.ResponseWriter, request *http.Request) {
-    fmt.Print(request)
-    jsonResponse := jSONText{"Health Check OK"}
-    responseWriter.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(responseWriter).Encode(jsonResponse)
-}
-
 func main() {
-    http.HandleFunc("/health-check", getHealth)
+    http.HandleFunc("/health-check", resources.GetHealth)
     http.ListenAndServe(":8080", nil)
 }
 
