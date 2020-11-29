@@ -1,6 +1,8 @@
 package dataprovider
 
 import (
+    "strconv"
+    "strings"
     "log"
     "database/sql"
     _ "github.com/go-sql-driver/mysql" // go get -u github.com/go-sql-driver/mysql
@@ -36,7 +38,7 @@ func (jdbcDataProvider JDBCDataProvider) GetProducts() []model.Product {
         panic(err.Error()) // proper error handling instead of panic in your app
     }
 
-    var out []model.Product
+    var products []model.Product
     for results.Next() {
         var product model.Product
         // for each row, scan the result into our tag composite object
@@ -44,16 +46,61 @@ func (jdbcDataProvider JDBCDataProvider) GetProducts() []model.Product {
         if err != nil {
             panic(err.Error()) // proper error handling instead of panic in your app
         }
-        // and then print out the tag's Name attribute
-        // log.Printf(product.Name)
-        out = append(out, product)
+        products = append(products, product)
     }
-    return out
+    return products
 }
 
 // GetFullProduct devuelve el detalle de un producto
 func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) model.Product {
-    return model.Product{}
+    // Open up our database connection.
+    db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
+
+    // if there is an error opening the connection, handle it
+    if err != nil {
+        log.Print(err.Error())
+    }
+    defer db.Close()
+
+    var product model.Product
+    var price []uint8
+
+    // Execute the query
+    err = db.QueryRow("SELECT referencia, nombre, urlImagen, CONCAT(SUBSTRING(descripcion, 1, 117), '...'), descripcion, precio, unidades FROM TablaCamiones WHERE referencia = ?", reference).Scan(
+    // err = db.QueryRow("SELECT * FROM TablaCamiones WHERE referencia = '"+reference+"'").Scan(
+        &product.Reference,
+        &product.Name,
+        &product.ImagePath,
+        &product.ShortDescription,
+        &product.ProductInfo.Description,
+        &price,
+        &product.ProductInfo.AvailableAmount,
+    )
+    if err != nil {
+        panic(err.Error()) // proper error handling instead of panic in your app
+    }
+
+    // ESTO AÚN NO FUNSIONAAAAA
+    valuesText := []string{}
+
+    // Create a string slice using strconv.Itoa.
+    // ... Append strings to it.
+    for i := range price {
+        number := price[i]
+        text := strconv.FormatUint(uint64(number), 10)
+        valuesText = append(valuesText, text)
+    }
+
+    // Join our string slice.
+    result := strings.Join(valuesText, "+")
+
+    product.ProductInfo.Price, err = strconv.Atoi(result)
+
+    if err != nil {
+        panic(err.Error()) // proper error handling instead of panic in your app
+    }
+
+    return product
 }
 
 // GetReserves devuelve la lista de reservas de un usuario
