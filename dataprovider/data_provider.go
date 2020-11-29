@@ -8,4 +8,5 @@ import (
 type DataProvider interface {
     GetProducts() []model.Product
     GetFullProduct(reference string) model.Product
+    GetReserves(username string, passwordSha string) []model.Reserve
 }
