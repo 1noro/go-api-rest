@@ -8,8 +8,8 @@ import (
     "../dataprovider"
 )
 
-// GetReserves devuelve la lista de reservas de un usuario en JSON
-func GetReserves(responseWriter http.ResponseWriter, request *http.Request) {
+// CheckLogin verifica la utenticidad del usuario y la contraseña
+func CheckLogin(responseWriter http.ResponseWriter, request *http.Request) {
     responseWriter.Header().Set("Content-Type", "application/json")
     params := mux.Vars(request)
     // fmt.Println(params)
@@ -17,5 +17,5 @@ func GetReserves(responseWriter http.ResponseWriter, request *http.Request) {
     passwordSha := params["passwordSha"]
     var dataProvider dataprovider.DataProvider
     dataProvider = dataprovider.GetDataProvider()
-    json.NewEncoder(responseWriter).Encode(dataProvider.GetReserves(username, passwordSha))
+    json.NewEncoder(responseWriter).Encode(dataProvider.CheckLogin(username, passwordSha))
 }

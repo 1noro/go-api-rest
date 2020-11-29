@@ -62,3 +62,14 @@ func (mockDataProvider MockDataProvider) GetReserves(username string, passwordSh
     }
     return []model.Reserve{reserve}
 }
+
+// PostReserve crea una reserva nueva para un usuario
+func (mockDataProvider MockDataProvider) PostReserve(reference string, username string, passwordSha string) {}
+
+// DeleteReserve borra una reserva nueva para un usuario
+func (mockDataProvider MockDataProvider) DeleteReserve(reference string, username string, passwordSha string) {}
+
+// CheckLogin comprueba si el usuario y la contraseña son correctos
+func (mockDataProvider MockDataProvider) CheckLogin(username string, passwordSha string) model.JSONHTTPResponse {
+    return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:200, Description: "OK", ExtraText: "Login check OK"}}
+}
