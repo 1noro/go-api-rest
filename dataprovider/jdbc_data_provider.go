@@ -1,8 +1,6 @@
 package dataprovider
 
 import (
-    "strconv"
-    "strings"
     "log"
     "database/sql"
     _ "github.com/go-sql-driver/mysql" // go get -u github.com/go-sql-driver/mysql
@@ -53,19 +51,16 @@ func (jdbcDataProvider JDBCDataProvider) GetProducts() []model.Product {
 
 // GetFullProduct devuelve el detalle de un producto
 func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) model.Product {
-    // Open up our database connection.
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
 
-    // if there is an error opening the connection, handle it
     if err != nil {
         log.Print(err.Error())
     }
+
     defer db.Close()
 
     var product model.Product
-    var price []uint8
 
-    // Execute the query
     err = db.QueryRow("SELECT referencia, nombre, urlImagen, CONCAT(SUBSTRING(descripcion, 1, 117), '...'), descripcion, precio, unidades FROM TablaCamiones WHERE referencia = ?", reference).Scan(
     // err = db.QueryRow("SELECT * FROM TablaCamiones WHERE referencia = '"+reference+"'").Scan(
         &product.Reference,
@@ -73,31 +68,12 @@ func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) model.
         &product.ImagePath,
         &product.ShortDescription,
         &product.ProductInfo.Description,
-        &price,
+        &product.ProductInfo.Price,
         &product.ProductInfo.AvailableAmount,
     )
-    if err != nil {
-        panic(err.Error()) // proper error handling instead of panic in your app
-    }
-
-    // ESTO AÚN NO FUNSIONAAAAA
-    valuesText := []string{}
-
-    // Create a string slice using strconv.Itoa.
-    // ... Append strings to it.
-    for i := range price {
-        number := price[i]
-        text := strconv.FormatUint(uint64(number), 10)
-        valuesText = append(valuesText, text)
-    }
-
-    // Join our string slice.
-    result := strings.Join(valuesText, "+")
-
-    product.ProductInfo.Price, err = strconv.Atoi(result)
 
     if err != nil {
-        panic(err.Error()) // proper error handling instead of panic in your app
+        panic(err.Error())
     }
 
     return product
