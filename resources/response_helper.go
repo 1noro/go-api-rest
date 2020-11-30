@@ -4,6 +4,16 @@ import (
     "../model"
 )
 
+func createOkResponse() model.JSONHTTPResponse {
+    response := model.HTTPResponse {
+        Code: 200,
+        Description: "OK",
+    }
+    return model.JSONHTTPResponse{
+        HTTPResponse: response,
+    }
+}
+
 func createUnauthorizedResponse() model.JSONHTTPResponse {
     response := model.HTTPResponse {
         Code: 401,

@@ -1,7 +1,6 @@
 package resources
 
 import (
-	// "fmt"
     "net/http"
     "encoding/json"
     "../model"

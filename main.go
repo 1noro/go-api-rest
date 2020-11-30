@@ -1,7 +1,6 @@
 package main
 
 import (
-    // "fmt"
     "net/http"
     "./resources"
     "github.com/gorilla/mux" // go get -u github.com/gorilla/mux

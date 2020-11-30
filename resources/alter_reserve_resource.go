@@ -1,7 +1,6 @@
 package resources
 
 import (
-    // "fmt"
     "net/http"
     // "encoding/json"
     "github.com/gorilla/mux"
@@ -12,7 +11,6 @@ import (
 func PostReserve(responseWriter http.ResponseWriter, request *http.Request) {
     // responseWriter.Header().Set("Content-Type", "application/json")
     params := mux.Vars(request)
-    // fmt.Println(params)
     username := params["username"]
     passwordSha := params["passwordSha"]
     reference := params["reference"]
@@ -26,7 +24,6 @@ func PostReserve(responseWriter http.ResponseWriter, request *http.Request) {
 func DeleteReserve(responseWriter http.ResponseWriter, request *http.Request) {
     // responseWriter.Header().Set("Content-Type", "application/json")
     params := mux.Vars(request)
-    // fmt.Println(params)
     username := params["username"]
     passwordSha := params["passwordSha"]
     reference := params["reference"]

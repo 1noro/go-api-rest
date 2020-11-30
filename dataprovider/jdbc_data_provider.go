@@ -186,16 +186,29 @@ func (jdbcDataProvider JDBCDataProvider) DeleteReserve(reference string, usernam
 }
 
 // CheckLogin comprueba si el usuario y la contraseña son correctos
-func (jdbcDataProvider JDBCDataProvider) CheckLogin(username string, passwordSha string) (model.JSONHTTPResponse, int) {
+func (jdbcDataProvider JDBCDataProvider) CheckLogin(username string, passwordSha string) int {
+    httpState := 200
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
-    if err != nil {log.Print(err.Error())}
     defer db.Close()
-    var user model.User
-    sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
-    err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
-    if err != nil {panic(err.Error())}
-    if user.CheckPassword(passwordSha) {
-        return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:200, Description: "OK", ExtraText: "Login check OK"}}, 200
+    if err != nil {
+        log.Print(err.Error())
+        httpState =  500
+    } else {
+        var user model.User
+        sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
+        err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
+        if err != nil {
+            log.Print(err.Error())
+            if err.Error() == "sql: no rows in result set" {
+                httpState = 404
+            } else {
+                httpState = 500
+            }
+        } else {
+            if !user.CheckPassword(passwordSha) {
+                httpState =  401
+            }
+        }
     }
-    return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:401, Description: "Unauthorized", ExtraText: "Login check FAILED"}}, 200
+    return httpState
 }

@@ -11,5 +11,5 @@ type DataProvider interface {
     GetReserves(username string, passwordSha string) ([]model.Reserve, int)
     PostReserve(reference string, username string, passwordSha string) int
     DeleteReserve(reference string, username string, passwordSha string) int
-    CheckLogin(username string, passwordSha string) (model.JSONHTTPResponse, int)
+    CheckLogin(username string, passwordSha string) int
 }
