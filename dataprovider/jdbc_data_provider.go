@@ -96,8 +96,6 @@ func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSh
         if err != nil {panic(err.Error())}
         for results.Next() {
             var reserve model.Reserve
-            // var reserveDate string
-            // for each row, scan the result into our tag composite object
             err = results.Scan(
                 &reserve.Product.Reference,
                 &reserve.Product.Name,
@@ -108,10 +106,6 @@ func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSh
                 &reserve.ReserveDate,
             )
             if err != nil {panic(err.Error())}
-            // const layout = "2020-11-28 23:45:39"
-            // myTime, _ := time.Parse(layout, reserveDate)
-            // reserve.ReserveDate = myTime.Unix()
-            // reserve.ReserveDate = reserveDate.Unix()
             reserves = append(reserves, reserve)
         }
         return reserves
