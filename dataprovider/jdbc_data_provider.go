@@ -121,5 +121,15 @@ func (jdbcDataProvider JDBCDataProvider) DeleteReserve(reference string, usernam
 
 // CheckLogin comprueba si el usuario y la contraseña son correctos
 func (jdbcDataProvider JDBCDataProvider) CheckLogin(username string, passwordSha string) model.JSONHTTPResponse {
-    return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:200, Description: "OK", ExtraText: "Login check OK"}}
+    db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
+    if err != nil {log.Print(err.Error())}
+    defer db.Close()
+    var user model.User
+    sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
+    err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
+    if err != nil {panic(err.Error())}
+    if user.CheckPassword(passwordSha) {
+        return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:200, Description: "OK", ExtraText: "Login check OK"}}
+    }
+    return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:401, Description: "Unauthorized", ExtraText: "Login check FAILED"}}
 }
