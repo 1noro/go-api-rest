@@ -26,29 +26,28 @@ func (jdbcDataProvider JDBCDataProvider) GetProducts() ([]model.Product, int) {
     // Open up our database connection.
     // db, err := sql.Open("mysql", "developer:pass@tcp(gitlab.afundacionfp.com:3306)/mysql")
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
-
+    defer db.Close()
     // if there is an error opening the connection, handle it
     if err != nil {
-        log.Print(err.Error())
-        httpState = 500
-    }
-    defer db.Close()
-
-    // Execute the query
-    results, err := db.Query("SELECT referencia, nombre, urlImagen, CONCAT(SUBSTRING(descripcion, 1, 117), '...') FROM TablaCamiones")
-    if err != nil {
-        log.Print(err.Error())
+        log.Print(err.Error()) // Error al conectar
         httpState = 500
     } else {
-        for results.Next() {
-            var product model.Product
-            // for each row, scan the result into our tag composite object
-            err = results.Scan(&product.Reference, &product.Name, &product.ImagePath, &product.ShortDescription)
-            if err != nil {
-                log.Print(err.Error())
-                httpState = 500
-            } else {
-                products = append(products, product)
+        // Execute the query
+        results, err := db.Query("SELECT referencia, nombre, urlImagen, CONCAT(SUBSTRING(descripcion, 1, 117), '...') FROM TablaCamiones")
+        if err != nil {
+            log.Print(err.Error()) // Error de la query
+            httpState = 500
+        } else {
+            for results.Next() {
+                var product model.Product
+                // for each row, scan the result into our tag composite object
+                err = results.Scan(&product.Reference, &product.Name, &product.ImagePath, &product.ShortDescription)
+                if err != nil {
+                    log.Print(err.Error()) // Error de la obtención de resultados
+                    httpState = 500
+                } else {
+                    products = append(products, product)
+                }
             }
         }
     }
@@ -57,28 +56,35 @@ func (jdbcDataProvider JDBCDataProvider) GetProducts() ([]model.Product, int) {
 
 // GetFullProduct devuelve el detalle de un producto
 func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) (model.Product, int) {
-    db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
-    if err != nil {log.Print(err.Error())}
-    defer db.Close()
-
     var product model.Product
-
-    sql := "SELECT referencia, nombre, urlImagen, CONCAT(SUBSTRING(descripcion, 1, 117), '...'), descripcion, precio, unidades " + 
-                "FROM TablaCamiones WHERE referencia = ?"
-    err = db.QueryRow(sql, reference).Scan(
-    // err = db.QueryRow("SELECT * FROM TablaCamiones WHERE referencia = '"+reference+"'").Scan(
-        &product.Reference,
-        &product.Name,
-        &product.ImagePath,
-        &product.ShortDescription,
-        &product.ProductInfo.Description,
-        &product.ProductInfo.Price,
-        &product.ProductInfo.AvailableAmount,
-    )
-
-    if err != nil {panic(err.Error())}
-
-    return product, 200
+    httpState := 200
+    db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
+    defer db.Close()
+    if err != nil {
+        log.Print(err.Error())
+        httpState = 500
+    } else {
+        sql := "SELECT referencia, nombre, urlImagen, CONCAT(SUBSTRING(descripcion, 1, 117), '...'), descripcion, precio, unidades " + 
+                    "FROM TablaCamiones WHERE referencia = ?"
+        err = db.QueryRow(sql, reference).Scan(
+            &product.Reference,
+            &product.Name,
+            &product.ImagePath,
+            &product.ShortDescription,
+            &product.ProductInfo.Description,
+            &product.ProductInfo.Price,
+            &product.ProductInfo.AvailableAmount,
+        )
+        if err != nil {
+            log.Print(err.Error())
+            if err.Error() == "sql: no rows in result set" {
+                httpState = 404
+            } else {
+                httpState = 500
+            }
+        }
+    }
+    return product, httpState
 }
 
 func makeTimestamp(enterTime time.Time) int64 {
