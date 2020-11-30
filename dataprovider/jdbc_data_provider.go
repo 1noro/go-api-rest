@@ -52,11 +52,7 @@ func (jdbcDataProvider JDBCDataProvider) GetProducts() []model.Product {
 // GetFullProduct devuelve el detalle de un producto
 func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) model.Product {
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
-
-    if err != nil {
-        log.Print(err.Error())
-    }
-
+    if err != nil {log.Print(err.Error())}
     defer db.Close()
 
     var product model.Product
@@ -72,15 +68,20 @@ func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) model.
         &product.ProductInfo.AvailableAmount,
     )
 
-    if err != nil {
-        panic(err.Error())
-    }
+    if err != nil {panic(err.Error())}
 
     return product
 }
 
 // GetReserves devuelve la lista de reservas de un usuario
 func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSha string) []model.Reserve {
+    db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
+    if err != nil {log.Print(err.Error())}
+    defer db.Close()
+    var user model.User
+    sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
+    err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
+    log.Print(user.CheckPassword(passwordSha))
     return []model.Reserve{model.Reserve{}}
 }
 
