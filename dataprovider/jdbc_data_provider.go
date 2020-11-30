@@ -2,6 +2,7 @@ package dataprovider
 
 import (
     "log"
+    "time"
     "database/sql"
     _ "github.com/go-sql-driver/mysql" // go get -u github.com/go-sql-driver/mysql
     "../model"
@@ -73,6 +74,10 @@ func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) model.
     return product
 }
 
+func makeTimestamp(enterTime time.Time) int64 {
+    return enterTime.UnixNano() / int64(time.Millisecond)
+}
+
 // GetReserves devuelve la lista de reservas de un usuario
 func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSha string) []model.Reserve {
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
@@ -81,7 +86,36 @@ func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSh
     var user model.User
     sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
     err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
-    log.Print(user.CheckPassword(passwordSha))
+    if err != nil {panic(err.Error())}
+    if user.CheckPassword(passwordSha) {
+        var reserves []model.Reserve
+        sql = "SELECT c.referencia, c.nombre, c.urlImagen, c.descripcion, c.precio, c.unidades, UNIX_TIMESTAMP(r.fecha) " +
+                    "FROM TablaReservas AS r, TablaCamiones AS c " +
+                    "WHERE r.idCliente = ? AND r.refCamion = c.referencia"
+        results, err := db.Query(sql, username)
+        if err != nil {panic(err.Error())}
+        for results.Next() {
+            var reserve model.Reserve
+            // var reserveDate string
+            // for each row, scan the result into our tag composite object
+            err = results.Scan(
+                &reserve.Product.Reference,
+                &reserve.Product.Name,
+                &reserve.Product.ImagePath,
+                &reserve.Product.ProductInfo.Description,
+                &reserve.Product.ProductInfo.Price,
+                &reserve.Product.ProductInfo.AvailableAmount,
+                &reserve.ReserveDate,
+            )
+            if err != nil {panic(err.Error())}
+            // const layout = "2020-11-28 23:45:39"
+            // myTime, _ := time.Parse(layout, reserveDate)
+            // reserve.ReserveDate = myTime.Unix()
+            // reserve.ReserveDate = reserveDate.Unix()
+            reserves = append(reserves, reserve)
+        }
+        return reserves
+    }
     return []model.Reserve{model.Reserve{}}
 }
 

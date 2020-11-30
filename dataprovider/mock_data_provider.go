@@ -1,7 +1,7 @@
 package dataprovider
 
 import (
-    "time"
+    // "time"
     "../model"
 )
 
@@ -58,7 +58,7 @@ func (mockDataProvider MockDataProvider) GetReserves(username string, passwordSh
     }
     reserve := model.Reserve{
         Product:product,
-        ReserveDate:time.Now().Unix(),
+        // ReserveDate:time.Now().Unix(),
     }
     return []model.Reserve{reserve}
 }
