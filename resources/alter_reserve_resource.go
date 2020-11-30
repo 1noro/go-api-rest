@@ -18,7 +18,7 @@ func PostReserve(responseWriter http.ResponseWriter, request *http.Request) {
     reference := params["reference"]
     var dataProvider dataprovider.DataProvider
     dataProvider = dataprovider.GetDataProvider()
-    dataProvider.PostReserve(reference, username, passwordSha)
+    _ = dataProvider.PostReserve(reference, username, passwordSha)
     // json.NewEncoder(responseWriter).Encode()
 }
 
@@ -32,6 +32,6 @@ func DeleteReserve(responseWriter http.ResponseWriter, request *http.Request) {
     reference := params["reference"]
     var dataProvider dataprovider.DataProvider
     dataProvider = dataprovider.GetDataProvider()
-    dataProvider.DeleteReserve(reference, username, passwordSha)
+    _ = dataProvider.DeleteReserve(reference, username, passwordSha)
     // json.NewEncoder(responseWriter).Encode()
 }

@@ -17,5 +17,6 @@ func CheckLogin(responseWriter http.ResponseWriter, request *http.Request) {
     passwordSha := params["passwordSha"]
     var dataProvider dataprovider.DataProvider
     dataProvider = dataprovider.GetDataProvider()
-    json.NewEncoder(responseWriter).Encode(dataProvider.CheckLogin(username, passwordSha))
+    response, _ := dataProvider.CheckLogin(username, passwordSha)
+    json.NewEncoder(responseWriter).Encode(response)
 }

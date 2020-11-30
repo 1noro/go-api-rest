@@ -20,7 +20,9 @@ var dbPort = "3306"
 var dbName = "mysql"
 
 // GetProducts devuelve una lista de productos para el catálogo
-func (jdbcDataProvider JDBCDataProvider) GetProducts() []model.Product {
+func (jdbcDataProvider JDBCDataProvider) GetProducts() ([]model.Product, int) {
+    var products []model.Product
+    httpState := 200
     // Open up our database connection.
     // db, err := sql.Open("mysql", "developer:pass@tcp(gitlab.afundacionfp.com:3306)/mysql")
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
@@ -28,37 +30,42 @@ func (jdbcDataProvider JDBCDataProvider) GetProducts() []model.Product {
     // if there is an error opening the connection, handle it
     if err != nil {
         log.Print(err.Error())
+        httpState = 500
     }
     defer db.Close()
 
     // Execute the query
     results, err := db.Query("SELECT referencia, nombre, urlImagen, CONCAT(SUBSTRING(descripcion, 1, 117), '...') FROM TablaCamiones")
     if err != nil {
-        panic(err.Error()) // proper error handling instead of panic in your app
-    }
-
-    var products []model.Product
-    for results.Next() {
-        var product model.Product
-        // for each row, scan the result into our tag composite object
-        err = results.Scan(&product.Reference, &product.Name, &product.ImagePath, &product.ShortDescription)
-        if err != nil {
-            panic(err.Error()) // proper error handling instead of panic in your app
+        log.Print(err.Error())
+        httpState = 500
+    } else {
+        for results.Next() {
+            var product model.Product
+            // for each row, scan the result into our tag composite object
+            err = results.Scan(&product.Reference, &product.Name, &product.ImagePath, &product.ShortDescription)
+            if err != nil {
+                log.Print(err.Error())
+                httpState = 500
+            } else {
+                products = append(products, product)
+            }
         }
-        products = append(products, product)
     }
-    return products
+    return products, httpState
 }
 
 // GetFullProduct devuelve el detalle de un producto
-func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) model.Product {
+func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) (model.Product, int) {
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
     if err != nil {log.Print(err.Error())}
     defer db.Close()
 
     var product model.Product
 
-    err = db.QueryRow("SELECT referencia, nombre, urlImagen, CONCAT(SUBSTRING(descripcion, 1, 117), '...'), descripcion, precio, unidades FROM TablaCamiones WHERE referencia = ?", reference).Scan(
+    sql := "SELECT referencia, nombre, urlImagen, CONCAT(SUBSTRING(descripcion, 1, 117), '...'), descripcion, precio, unidades " + 
+                "FROM TablaCamiones WHERE referencia = ?"
+    err = db.QueryRow(sql, reference).Scan(
     // err = db.QueryRow("SELECT * FROM TablaCamiones WHERE referencia = '"+reference+"'").Scan(
         &product.Reference,
         &product.Name,
@@ -71,7 +78,7 @@ func (jdbcDataProvider JDBCDataProvider) GetFullProduct(reference string) model.
 
     if err != nil {panic(err.Error())}
 
-    return product
+    return product, 200
 }
 
 func makeTimestamp(enterTime time.Time) int64 {
@@ -79,7 +86,7 @@ func makeTimestamp(enterTime time.Time) int64 {
 }
 
 // GetReserves devuelve la lista de reservas de un usuario
-func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSha string) []model.Reserve {
+func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSha string) ([]model.Reserve, int) {
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
     if err != nil {log.Print(err.Error())}
     defer db.Close()
@@ -108,13 +115,13 @@ func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSh
             if err != nil {panic(err.Error())}
             reserves = append(reserves, reserve)
         }
-        return reserves
+        return reserves, 200
     }
-    return []model.Reserve{model.Reserve{}}
+    return []model.Reserve{model.Reserve{}}, 200
 }
 
 // PostReserve crea una reserva nueva para un usuario
-func (jdbcDataProvider JDBCDataProvider) PostReserve(reference string, username string, passwordSha string) {
+func (jdbcDataProvider JDBCDataProvider) PostReserve(reference string, username string, passwordSha string) int {
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
     if err != nil {log.Print(err.Error())}
     defer db.Close()
@@ -128,10 +135,11 @@ func (jdbcDataProvider JDBCDataProvider) PostReserve(reference string, username 
         if err != nil {panic(err.Error())}
         defer insert.Close()
     }
+    return 200
 }
 
 // DeleteReserve borra una reserva nueva para un usuario
-func (jdbcDataProvider JDBCDataProvider) DeleteReserve(reference string, username string, passwordSha string) {
+func (jdbcDataProvider JDBCDataProvider) DeleteReserve(reference string, username string, passwordSha string) int {
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
     if err != nil {log.Print(err.Error())}
     defer db.Close()
@@ -145,10 +153,11 @@ func (jdbcDataProvider JDBCDataProvider) DeleteReserve(reference string, usernam
         if err != nil {panic(err.Error())}
         defer delete.Close()
     }
+    return 200
 }
 
 // CheckLogin comprueba si el usuario y la contraseña son correctos
-func (jdbcDataProvider JDBCDataProvider) CheckLogin(username string, passwordSha string) model.JSONHTTPResponse {
+func (jdbcDataProvider JDBCDataProvider) CheckLogin(username string, passwordSha string) (model.JSONHTTPResponse, int) {
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
     if err != nil {log.Print(err.Error())}
     defer db.Close()
@@ -157,7 +166,7 @@ func (jdbcDataProvider JDBCDataProvider) CheckLogin(username string, passwordSha
     err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
     if err != nil {panic(err.Error())}
     if user.CheckPassword(passwordSha) {
-        return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:200, Description: "OK", ExtraText: "Login check OK"}}
+        return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:200, Description: "OK", ExtraText: "Login check OK"}}, 200
     }
-    return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:401, Description: "Unauthorized", ExtraText: "Login check FAILED"}}
+    return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:401, Description: "Unauthorized", ExtraText: "Login check FAILED"}}, 200
 }

@@ -11,5 +11,11 @@ func GetProducts(responseWriter http.ResponseWriter, request *http.Request) {
     responseWriter.Header().Set("Content-Type", "application/json")
     var dataProvider dataprovider.DataProvider
     dataProvider = dataprovider.GetDataProvider()
-    json.NewEncoder(responseWriter).Encode(dataProvider.GetProducts())
+    products, httpState := dataProvider.GetProducts()
+    if httpState == 200 {
+        json.NewEncoder(responseWriter).Encode(products)
+    } else if httpState == 500 {
+        responseWriter.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(responseWriter).Encode(createInternalServerErrorResponse())
+    }
 }

@@ -9,7 +9,7 @@ import (
 type MockDataProvider struct {}
 
 // GetProducts devuelve una lista de productos para el catálogo
-func (mockDataProvider MockDataProvider) GetProducts() []model.Product {
+func (mockDataProvider MockDataProvider) GetProducts() ([]model.Product, int) {
     product1 := model.Product{
         Reference:"R-001",
         Name:"BatTruck",
@@ -22,11 +22,11 @@ func (mockDataProvider MockDataProvider) GetProducts() []model.Product {
         ImagePath:"https://i.ibb.co/F8mm32n/02.png",
         ShortDescription:"Uno de los mejores vehículos del catálogo. Gran estabilidad y capacidad de aplastar todo a su paso. Este vehículo fue...",
     }
-    return []model.Product{product1, pproduct2}
+    return []model.Product{product1, pproduct2}, 200
 }
 
 // GetFullProduct devuelve el detalle de un producto
-func (mockDataProvider MockDataProvider) GetFullProduct(reference string) model.Product {
+func (mockDataProvider MockDataProvider) GetFullProduct(reference string) (model.Product, int) {
     info := model.ProductInfo{
         Description:"El camión monstruo más heroico. Ganó la copa mundial TruckStarts 2017 contra el TruckJoker.",
         Price:799999,
@@ -39,11 +39,11 @@ func (mockDataProvider MockDataProvider) GetFullProduct(reference string) model.
         ShortDescription:"El camión monstruo más heroico. Ganó la copa mundial TruckStarts 2017 contra el TruckJoker.",
         ProductInfo:info,
     }
-    return product
+    return product, 200
 }
 
 // GetReserves devuelve la lista de reservas de un usuario
-func (mockDataProvider MockDataProvider) GetReserves(username string, passwordSha string) []model.Reserve {
+func (mockDataProvider MockDataProvider) GetReserves(username string, passwordSha string) ([]model.Reserve, int) {
     info := model.ProductInfo{
         Description:"El camión monstruo más heroico. Ganó la copa mundial TruckStarts 2017 contra el TruckJoker.",
         Price:799999,
@@ -60,16 +60,20 @@ func (mockDataProvider MockDataProvider) GetReserves(username string, passwordSh
         Product:product,
         // ReserveDate:time.Now().Unix(),
     }
-    return []model.Reserve{reserve}
+    return []model.Reserve{reserve}, 200
 }
 
 // PostReserve crea una reserva nueva para un usuario
-func (mockDataProvider MockDataProvider) PostReserve(reference string, username string, passwordSha string) {}
+func (mockDataProvider MockDataProvider) PostReserve(reference string, username string, passwordSha string) int {
+    return 200
+}
 
 // DeleteReserve borra una reserva nueva para un usuario
-func (mockDataProvider MockDataProvider) DeleteReserve(reference string, username string, passwordSha string) {}
+func (mockDataProvider MockDataProvider) DeleteReserve(reference string, username string, passwordSha string) int {
+    return 200
+}
 
 // CheckLogin comprueba si el usuario y la contraseña son correctos
-func (mockDataProvider MockDataProvider) CheckLogin(username string, passwordSha string) model.JSONHTTPResponse {
-    return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:200, Description: "OK", ExtraText: "Login check OK"}}
+func (mockDataProvider MockDataProvider) CheckLogin(username string, passwordSha string) (model.JSONHTTPResponse, int) {
+    return model.JSONHTTPResponse{HTTPResponse:model.HTTPResponse{Code:200, Description: "OK", ExtraText: "Login check OK"}}, 200
 }

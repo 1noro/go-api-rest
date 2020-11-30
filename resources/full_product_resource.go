@@ -14,5 +14,6 @@ func GetFullProduct(responseWriter http.ResponseWriter, request *http.Request) {
     reference := params["reference"]
     var dataProvider dataprovider.DataProvider
     dataProvider = dataprovider.GetDataProvider()
-    json.NewEncoder(responseWriter).Encode(dataProvider.GetFullProduct(reference))
+    product, _ := dataProvider.GetFullProduct(reference)
+    json.NewEncoder(responseWriter).Encode(product)
 }

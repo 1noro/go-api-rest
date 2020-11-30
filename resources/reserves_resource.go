@@ -17,5 +17,6 @@ func GetReserves(responseWriter http.ResponseWriter, request *http.Request) {
     passwordSha := params["passwordSha"]
     var dataProvider dataprovider.DataProvider
     dataProvider = dataprovider.GetDataProvider()
-    json.NewEncoder(responseWriter).Encode(dataProvider.GetReserves(username, passwordSha))
+    reserves, _ := dataProvider.GetReserves(username, passwordSha)
+    json.NewEncoder(responseWriter).Encode(reserves)
 }
