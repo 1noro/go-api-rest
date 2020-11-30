@@ -114,10 +114,38 @@ func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSh
 }
 
 // PostReserve crea una reserva nueva para un usuario
-func (jdbcDataProvider JDBCDataProvider) PostReserve(reference string, username string, passwordSha string) {}
+func (jdbcDataProvider JDBCDataProvider) PostReserve(reference string, username string, passwordSha string) {
+    db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
+    if err != nil {log.Print(err.Error())}
+    defer db.Close()
+    var user model.User
+    sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
+    err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
+    if err != nil {panic(err.Error())}
+    if user.CheckPassword(passwordSha) {
+        sql = "INSERT INTO TablaReservas(idCliente, refCamion) VALUES(?, ?)"
+        insert, err := db.Query(sql, username, reference)
+        if err != nil {panic(err.Error())}
+        defer insert.Close()
+    }
+}
 
 // DeleteReserve borra una reserva nueva para un usuario
-func (jdbcDataProvider JDBCDataProvider) DeleteReserve(reference string, username string, passwordSha string) {}
+func (jdbcDataProvider JDBCDataProvider) DeleteReserve(reference string, username string, passwordSha string) {
+    db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
+    if err != nil {log.Print(err.Error())}
+    defer db.Close()
+    var user model.User
+    sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
+    err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
+    if err != nil {panic(err.Error())}
+    if user.CheckPassword(passwordSha) {
+        sql = "DELETE FROM TablaReservas WHERE (idCliente = ?) AND (refCamion = ?)"
+        delete, err := db.Query(sql, username, reference)
+        if err != nil {panic(err.Error())}
+        defer delete.Close()
+    }
+}
 
 // CheckLogin comprueba si el usuario y la contraseña son correctos
 func (jdbcDataProvider JDBCDataProvider) CheckLogin(username string, passwordSha string) model.JSONHTTPResponse {
