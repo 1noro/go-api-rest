@@ -17,6 +17,17 @@ func GetReserves(responseWriter http.ResponseWriter, request *http.Request) {
     passwordSha := params["passwordSha"]
     var dataProvider dataprovider.DataProvider
     dataProvider = dataprovider.GetDataProvider()
-    reserves, _ := dataProvider.GetReserves(username, passwordSha)
-    json.NewEncoder(responseWriter).Encode(reserves)
+    reserves, httpState := dataProvider.GetReserves(username, passwordSha)
+    if httpState == 200 {
+        json.NewEncoder(responseWriter).Encode(reserves)
+    } else if httpState == 401 {
+        responseWriter.WriteHeader(http.StatusUnauthorized)
+        json.NewEncoder(responseWriter).Encode(createUnauthorizedResponse())
+    } else if httpState == 404 {
+        responseWriter.WriteHeader(http.StatusNotFound)
+        json.NewEncoder(responseWriter).Encode(createNotFoundResponse())
+    } else if httpState == 500 {
+        responseWriter.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(responseWriter).Encode(createInternalServerErrorResponse())
+    }
 }
