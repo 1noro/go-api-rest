@@ -1,6 +1,7 @@
 package dataprovider
 
 import (
+    "strconv"
     "log"
     "time"
     "database/sql"
@@ -151,20 +152,41 @@ func (jdbcDataProvider JDBCDataProvider) GetReserves(username string, passwordSh
 
 // PostReserve crea una reserva nueva para un usuario
 func (jdbcDataProvider JDBCDataProvider) PostReserve(reference string, username string, passwordSha string) int {
+    httpState := 201
     db, err := sql.Open(dbServer, dbUsername+":"+dbPass+"@"+dbProtocol+"("+dbURL+":"+dbPort+")/"+dbName)
-    if err != nil {log.Print(err.Error())}
     defer db.Close()
-    var user model.User
-    sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
-    err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
-    if err != nil {panic(err.Error())}
-    if user.CheckPassword(passwordSha) {
-        sql = "INSERT INTO TablaReservas(idCliente, refCamion) VALUES(?, ?)"
-        insert, err := db.Query(sql, username, reference)
-        if err != nil {panic(err.Error())}
-        defer insert.Close()
+    if err != nil {
+        log.Print(err.Error()) // falla la conexion
+        httpState = 500
+    } else {
+        var user model.User
+        sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
+        err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
+        if err != nil {
+            log.Print(err.Error()) // falla la query
+            if err.Error() == "sql: no rows in result set" {
+                httpState = 404
+            } else {
+                httpState = 500
+            }
+        } else {
+            if user.CheckPassword(passwordSha) {
+                sql = "INSERT INTO TablaReservas(idCliente, refCamion) VALUES(?, ?)"
+                result, err := db.Exec(sql, username, reference)
+                lastInsertID, _ := result.LastInsertId()
+                rowsAffected, _ := result.RowsAffected()
+                log.Print("LastInsertId: " + strconv.Itoa(int(lastInsertID)))
+                log.Print("RowsAffected: " + strconv.Itoa(int(rowsAffected)))
+                if err != nil {
+                    log.Print(err.Error()) // falla la query
+                    httpState = 500
+                }
+            } else {
+                httpState = 401 // contraseña incorrecta
+            }
+        }
     }
-    return 200
+    return httpState
 }
 
 // DeleteReserve borra una reserva nueva para un usuario

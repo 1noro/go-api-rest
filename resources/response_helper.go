@@ -14,6 +14,16 @@ func createOkResponse() model.JSONHTTPResponse {
     }
 }
 
+func createCreatedResponse() model.JSONHTTPResponse {
+    response := model.HTTPResponse {
+        Code: 201,
+        Description: "Created",
+    }
+    return model.JSONHTTPResponse{
+        HTTPResponse: response,
+    }
+}
+
 func createUnauthorizedResponse() model.JSONHTTPResponse {
     response := model.HTTPResponse {
         Code: 401,
@@ -28,6 +38,16 @@ func createNotFoundResponse() model.JSONHTTPResponse {
     response := model.HTTPResponse {
         Code: 404,
         Description: "Not Found",
+    }
+    return model.JSONHTTPResponse{
+        HTTPResponse: response,
+    }
+}
+
+func createConflictResponse() model.JSONHTTPResponse {
+    response := model.HTTPResponse {
+        Code: 409,
+        Description: "Conflict",
     }
     return model.JSONHTTPResponse{
         HTTPResponse: response,
