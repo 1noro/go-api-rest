@@ -160,7 +160,7 @@ func (jdbcDataProvider JDBCDataProvider) PostReserve(reference string, username 
     } else {
         var user model.User
         sql := "SELECT usuario, contrasenaSha1, salt FROM TablaClientes WHERE usuario = ?"
-        
+        err = db.QueryRow(sql, username).Scan(&user.Username, &user.ConcatenatedPasswordSha, &user.Salt)
         if err != nil {
             log.Print(err.Error()) // falla la query
             if err.Error() == "sql: no rows in result set" {
@@ -169,28 +169,22 @@ func (jdbcDataProvider JDBCDataProvider) PostReserve(reference string, username 
                 httpState = 500
             }
         } else {
-            log.Print(user.CheckPassword(passwordSha)) // REVISAR PORQUE DA FALSO
             if user.CheckPassword(passwordSha) {
                 var refCamion string
                 sql = "SELECT refCamion FROM TablaReservas WHERE idCliente = ? AND refCamion = ?"
-                err = db.QueryRow(sql, username, reference).Scan(&refCamion)
-                if err != nil {
-                    log.Print(err.Error()) // falla la query
-                    httpState = 500
+                _ = db.QueryRow(sql, username, reference).Scan(&refCamion)
+                if refCamion == reference {
+                    httpState = 409 // conflicto, ya existe la reserva
                 } else {
-                    if refCamion == reference {
-                        httpState = 409 // conflicto, ya existe la reserva
+                    sql = "INSERT INTO TablaReservas(idCliente, refCamion) VALUES(?, ?)"
+                    result, err := db.Exec(sql, username, reference)
+                    if err != nil {
+                        log.Print(err.Error()) // falla la query
+                        httpState = 500
                     } else {
-                        sql = "INSERT INTO TablaReservas(idCliente, refCamion) VALUES(?, ?)"
-                        result, err := db.Exec(sql, username, reference)
-                        if err != nil {
-                            log.Print(err.Error()) // falla la query
-                            httpState = 500
-                        } else {
-                            rowsAffected, _ := result.RowsAffected()
-                            if rowsAffected == 0 {
-                                httpState = 500 // no se ha insertado nada
-                            }
+                        rowsAffected, _ := result.RowsAffected()
+                        if rowsAffected == 0 {
+                            httpState = 500 // no se ha insertado nada
                         }
                     }
                 }
