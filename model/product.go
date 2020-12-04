@@ -4,7 +4,7 @@ package model
 type Product struct {
     Reference string `json:"reference"`
     Name string `json:"name"`
-    ImagePath string `json:"image_path"`
-    ShortDescription string `json:"short_description"`
-    ProductInfo ProductInfo `json:"product_info"`
+    ImagePath string `json:"imagePath"` // `json:"image_path"`
+    ShortDescription string `json:"shortDescription"` // `json:"short_description"`
+    ProductInfo ProductInfo `json:"productInfo"` // `json:"product_info"`
 }

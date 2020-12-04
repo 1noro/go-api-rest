@@ -4,5 +4,5 @@ package model
 type ProductInfo struct {
     Description string `json:"description"`
     Price float32 `json:"price"`
-    AvailableAmount int `json:"available_amount"`
+    AvailableAmount int `json:"availableAmount"` // `json:"available_amount"`
 }
