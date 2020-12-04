@@ -14,6 +14,17 @@ func createOkResponse() model.JSONHTTPResponse {
     }
 }
 
+func createOkResponseExtra(extraText string) model.JSONHTTPResponse {
+    response := model.HTTPResponse {
+        Code: 200,
+        Description: "OK",
+        ExtraText: extraText,
+    }
+    return model.JSONHTTPResponse{
+        HTTPResponse: response,
+    }
+}
+
 func createCreatedResponse() model.JSONHTTPResponse {
     response := model.HTTPResponse {
         Code: 201,

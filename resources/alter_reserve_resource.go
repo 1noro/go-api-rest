@@ -44,17 +44,14 @@ func DeleteReserve(responseWriter http.ResponseWriter, request *http.Request) {
     var dataProvider dataprovider.DataProvider
     dataProvider = dataprovider.GetDataProvider()
     httpState := dataProvider.DeleteReserve(reference, username, passwordSha)
-    if httpState == 201 {
-        json.NewEncoder(responseWriter).Encode(createCreatedResponse())
+    if httpState == 200 {
+        json.NewEncoder(responseWriter).Encode(createOkResponseExtra("Deleted"))
     } else if httpState == 401 {
         responseWriter.WriteHeader(http.StatusUnauthorized)
         json.NewEncoder(responseWriter).Encode(createUnauthorizedResponse())
     } else if httpState == 404 {
         responseWriter.WriteHeader(http.StatusNotFound)
         json.NewEncoder(responseWriter).Encode(createNotFoundResponse())
-    } else if httpState == 409 {
-        responseWriter.WriteHeader(http.StatusNotFound)
-        json.NewEncoder(responseWriter).Encode(createConflictResponse())
     } else if httpState == 500 {
         responseWriter.WriteHeader(http.StatusInternalServerError)
         json.NewEncoder(responseWriter).Encode(createInternalServerErrorResponse())
