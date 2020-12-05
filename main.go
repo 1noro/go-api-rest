@@ -15,6 +15,7 @@ func main() {
     router.HandleFunc("/{username}/reserve/{reference}", resources.PostReserve).Queries("passwordSha", "{passwordSha}").Methods("POST")
     router.HandleFunc("/{username}/reserve/{reference}", resources.DeleteReserve).Queries("passwordSha", "{passwordSha}").Methods("DELETE")
     router.HandleFunc("/{username}/login", resources.CheckLogin).Queries("passwordSha", "{passwordSha}").Methods("GET")
+    router.HandleFunc("/info/{text}", resources.GetURLInfo).Methods("GET")
     http.ListenAndServe(":8080", router)
 }
 
